@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import Navbar from "@/components/layout/Navbar";
-import { cookies } from "next/headers";
-import "../styles/global.css";
+import "../styles/index.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,13 +26,19 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Navbar isAuthenticated={(await cookies()).has("token")} />
-        <main className="flex-1 p-6">{children}</main>
-      </body>
-    </html>
+    <ClerkProvider afterSignOutUrl="/login" signInUrl="/login" signInForceRedirectUrl="/" appearance={{ variables: { colorPrimary: '#fe5933' } }}>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <Navbar />
+
+          <main className="flex-1 p-6">{children}</main>
+        </body>
+      </html>
+
+
+    </ClerkProvider>
+
   );
 }
