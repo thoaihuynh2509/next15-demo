@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer components {
+  .navbar {
+    @apply flex items-center justify-between mx-auto w-full px-14 py-4 bg-white shadow-md;
+  }
+}
