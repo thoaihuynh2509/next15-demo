@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-
 import Navbar from "@/components/layout/Navbar";
 import "../styles/index.css";
 import { ClerkProvider } from "@clerk/nextjs";
@@ -26,19 +25,20 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider afterSignOutUrl="/login" signInUrl="/login" signInForceRedirectUrl="/" appearance={{ variables: { colorPrimary: '#fe5933' } }}>
-      <html lang="en">
+    <ClerkProvider
+      afterSignOutUrl="/login"
+      signInUrl="/login"
+      signInForceRedirectUrl="/"
+      appearance={{ variables: { colorPrimary: '#fe5933' } }}
+    >
+      <html lang="en" className="h-full">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${geistSans.variable} ${geistMono.variable} antialiased h-full flex flex-col`}
         >
           <Navbar />
-
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6 w-full">{children}</main>
         </body>
       </html>
-
-
     </ClerkProvider>
-
   );
 }

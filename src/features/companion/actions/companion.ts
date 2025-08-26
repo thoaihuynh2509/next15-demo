@@ -5,13 +5,16 @@ import { createSupabaseClient } from "@/lib/supabase";
 import { revalidatePath } from "next/cache";
 
 export const createCompanion = async (formData: CreateCompanion) => {
-  const { userId: author } = await auth();
+  const { userId: created_by } = await auth();
   const supabase = createSupabaseClient();
+
+  console.log(formData)
 
   const { data, error } = await supabase
     .from('companions')
-    .insert({ ...formData, author })
+    .insert({ ...formData, created_by })
     .select();
+
 
   if (error || !data) throw new Error(error?.message || 'Failed to create a companion');
 
@@ -100,7 +103,7 @@ export const getUserCompanions = async (userId: string) => {
   const { data, error } = await supabase
     .from('companions')
     .select()
-    .eq('author', userId)
+    .eq('created_by', userId)
 
   if (error) throw new Error(error.message);
 
@@ -108,32 +111,54 @@ export const getUserCompanions = async (userId: string) => {
 }
 
 export const newCompanionPermissions = async () => {
-  const { userId, has } = await auth();
-  const supabase = createSupabaseClient();
+  try {
+    const { userId, has } = await auth();
 
-  let limit = 0;
+    // Check if userId exists
+    if (!userId) {
+      console.error('No user ID found in authentication');
+      return false;
+    }
 
-  if (has({ plan: 'pro' })) {
-    return true;
-  } else if (has({ feature: "3_companion_limit" })) {
-    limit = 3;
-  } else if (has({ feature: "10_companion_limit" })) {
-    limit = 10;
-  }
+    const supabase = createSupabaseClient();
 
-  const { data, error } = await supabase
-    .from('companions')
-    .select('id', { count: 'exact' })
-    .eq('author', userId)
+    let limit = 0;
 
-  if (error) throw new Error(error.message);
+    if (has({ plan: 'pro' })) {
+      return true;
+    } else if (has({ feature: "3_companion_limit" })) {
+      limit = 3;
+    } else if (has({ feature: "10_companion_limit" })) {
+      limit = 10;
+    }
 
-  const companionCount = data?.length;
+    // If no limit is set (free tier), allow creation
+    if (limit === 0) {
+      return true;
+    }
 
-  if (companionCount >= limit) {
-    return false
-  } else {
-    return true;
+    const { data, error, count } = await supabase
+      .from('companions')
+      .select('id', { count: 'exact' })
+      .eq('created_by', userId);
+
+    if (error) {
+      console.error('Supabase error:', error);
+      throw new Error(`Database error: ${error.message}`);
+    }
+
+    const companionCount = count || 0;
+
+    if (companionCount >= limit) {
+      console.log(`Companion limit reached: ${companionCount}/${limit}`);
+      return false;
+    } else {
+      console.log(`Companion count: ${companionCount}/${limit} - Allowed`);
+      return true;
+    }
+  } catch (error) {
+    console.error('Error in newCompanionPermissions:', error);
+    throw new Error('Failed to check companion limit');
   }
 }
 
